@@ -1,0 +1,81 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+
+class User extends Authenticatable
+{
+    use HasApiTokens, HasFactory, Notifiable;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'address',
+        'city',
+        'zip_code',
+        'country    ',
+        'phone_number',
+        'profile_image',
+        'profile_completed',
+    ];
+
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var array<int, string>
+     */
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected $appends = [
+        'image_path',
+
+    ];
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+
+    ];
+
+    public function setPasswordAttribute($value)
+    {
+        if (!empty($value)) {
+            $this->attributes['password'] = bcrypt($value);
+        }
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class)
+            ->with('products')
+            ->latest();
+    }
+    // setImagePathAttribute
+    public function getImagePathAttribute()
+    {
+        if ($this->profile_image) {
+            // return url
+            return asset($this->profile_image);
+        } else {
+            // default image
+            return "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_1280.png";
+        }
+    }
+}
